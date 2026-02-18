@@ -140,6 +140,7 @@ canvas{display:block;width:390px;height:844px;}
   font-family:'Noto Serif TC',serif;font-size:15px;font-weight:700;color:var(--gold);
   text-shadow:0 0 10px rgba(240,192,64,.45);white-space:nowrap;
 }
+/* level-2 timer display */
 #hudTimer{font-size:14px;font-weight:700;color:#FF9999;white-space:nowrap;display:none;}
 .hud-r2{display:flex;align-items:center;gap:8px;margin-top:7px;}
 .prog-trk{flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;}
@@ -643,7 +644,7 @@ function updateLv1(dt){
 function drawLv1(){lv1Envelopes.forEach(e=>{for(let i=0;i<4;i++){const a=e.pulse+(Math.PI/2)*i,d=e.sz*.9+Math.sin(e.pulse)*3.5;ctx.globalAlpha=.24+Math.sin(e.pulse+i)*.18;ctx.fillStyle='#F0C040';ctx.beginPath();ctx.arc(e.x+Math.cos(a)*d,e.y+Math.sin(a)*d,2.2,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;drawEnvelope(e.x,e.y,e.sz,e.ang,e.pulse);});lv1Obstacles.forEach(o=>drawQuestion(o));}
 
 function initLv2(){const pool=Array.from({length:45},(_,i)=>i+1);winNums=[];while(winNums.length<6){winNums.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);}winNums.sort((a,b)=>a-b);winNumHits={};winNums.forEach(n=>winNumHits[n]=2);collectedNums=new Set();lv2Balls=[];lv2BallTimer=0;lv2Timer=LV2_TIME;lv2CollectedCount=0;}
-function startLv2Reveal(){initLv2();showScreen('lv2RevealScreen');state='lv2_reveal';const area=document.getElementById('revealNumsArea');area.innerHTML='';winNums.forEach(n=>{const el=document.createElement('div');el.className='rev-ball';el.id=`rv-${n}`;el.textContent=n;area.appendChild(el);});document.getElementById('revealHint').textContent='搖獎中⋯';document.getElementById('revealStartBtn').classList.remove('ready');winNums.forEach((n,i)=>{setTimeout(()=>{const orb=document.getElementById('revealOrbEmoji');orb.style.transform='scale(1.3) rotate(20deg)';setTimeout(()=>orb.style.transform='',180);document.getElementById(`rv-${n}`).classList.add('shown');if(i===winNums.length-1){setTimeout(()=>{document.getElementById('revealHint').textContent='好！把這 6 個號碼記在心裡，碰它就對了！';document.getElementById('revealStartBtn').classList.add('ready');}, 400);}}, 600 + i*520);});}
+function startLv2Reveal(){initLv2();showScreen('lv2RevealScreen');state='lv2_reveal';const area=document.getElementById('revealNumsArea');area.innerHTML='';winNums.forEach(n=>{const el=document.createElement('div');el.className='rev-ball';el.id=`rv-${n}`;el.textContent=n;area.appendChild(el);});document.getElementById('revealHint').textContent='搖獎中⋯';document.getElementById('revealStartBtn').classList.remove('ready');winNums.forEach((n,i)=>{setTimeout(()=>{const orb=document.getElementById('revealOrbEmoji');orb.style.transform='scale(1.3) rotate(20deg)';setTimeout(()=>orb.style.transform='',180);const rvel=document.getElementById(`rv-${n}`);if(rvel)rvel.classList.add('shown');if(i===winNums.length-1){setTimeout(()=>{document.getElementById('revealHint').textContent='好！把這 6 個號碼記在心裡，碰它就對了！';document.getElementById('revealStartBtn').classList.add('ready');}, 400);}}, 600 + i*520);});}
 
 const BALL_THEMES=[{bg:['#E04030','#901808'],border:'#FFD0C0',text:'#fff'},{bg:['#2040C0','#0A1880'],border:'#A0C0FF',text:'#fff'},{bg:['#208040','#0A4020'],border:'#A0FFC0',text:'#fff'},{bg:['#8040C0','#3A1870'],border:'#D0A0FF',text:'#fff'},{bg:['#C07820','#703A08'],border:'#FFD080',text:'#fff'},{bg:['#1890A0','#085068'],border:'#80E0F0',text:'#fff'}];
 function lv2SpawnBall(){const rem=winNums.filter(n=>winNumHits[n]>0);const isWin=rem.length>0&&Math.random()<(0.25+((LV2_TIME-lv2Timer)/LV2_TIME)*0.3);let num;if(isWin){num=rem[Math.floor(Math.random()*rem.length)];winNumHits[num]--;}else{let tries=0;const used=new Set(winNums.filter(n=>winNumHits[n]>0));do{num=1+Math.floor(Math.random()*45);tries++;}while(used.has(num)&&tries<30);}let x,y,vx,vy;if(Math.random()<.45){x=Math.random()<.5?-50:W+50;y=90+Math.random()*(H-220);vx=x<0?1.2+Math.random()*1.5:-(1.2+Math.random()*1.5);vy=(Math.random()-.5)*1.2;}else{x=30+Math.random()*(W-60);y=-55;vx=(Math.random()-.5)*1.4;vy=1.5+Math.random()*1.5;}lv2Balls.push({x,y,vx,vy,num,isWin,r:22+Math.random()*8,theme:BALL_THEMES[Math.floor(Math.random()*BALL_THEMES.length)],pulse:Math.random()*Math.PI*2,alive:true});}
@@ -659,7 +660,7 @@ function updateLv2(dt){
 
 function updateShared(dt){if(invFrames>0)invFrames-=dt*60;if(shakeDur>0){shakeDur-=dt*60;shakeX=(Math.random()-.5)*7;shakeY=(Math.random()-.5)*7;}else{shakeX=0;shakeY=0;}if(touching){player.x+=(touchX-player.x)*.13;player.y+=(touchY-player.y)*.13;}player.x=Math.max(26,Math.min(W-26,player.x));player.y=Math.max(72,Math.min(H-80,player.y));player.frame++;player.trail.push({x:player.x,y:player.y});if(player.trail.length>10)player.trail.shift();bgStars.forEach(s=>{s.y+=s.spd;if(s.y>H){s.y=0;s.x=Math.random()*W;}});particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.life-=.02;});particles=particles.filter(p=>p.life>0);bursts.forEach(b=>{b.x+=b.vx;b.y+=b.vy;b.vx*=.95;b.vy*=.95;b.vy+=.045;b.life-=.025;});bursts=bursts.filter(b=>b.life>0);}
 function update(dt){if(state==='lv1')updateShared(dt),updateLv1(dt);else if(state==='lv2')updateShared(dt),updateLv2(dt);else if(state==='lv3')updateShared(dt),updateLv3(dt);}
-function drawGame(){ctx.save();if(shakeDur>0)ctx.translate(shakeX,shakeY);drawBG();if(state==='lv1')drawLv1();else if(state==='lv2')drawLv2Ball({x:-100,y:-100}),lv2Balls.forEach(b=>drawLv2Ball(b));else if(state==='lv3')drawLv3();bursts.forEach(b=>{ctx.globalAlpha=b.life;ctx.fillStyle=`hsla(${b.hue},${b.sat}%,${b.lit}%,1)`;if(b.star){ctx.save();ctx.translate(b.x,b.y);drawStar(ctx,0,0,b.sz*1.4,b.sz*.55);ctx.restore();}else{ctx.beginPath();ctx.arc(b.x,b.y,b.sz,0,Math.PI*2);ctx.fill();}});ctx.globalAlpha=1;if(!(invFrames>0&&Math.floor(invFrames/7)%2===0))drawHorse(player.x,player.y,player.frame);particles.forEach(p=>{ctx.globalAlpha=p.life;ctx.fillStyle=p.col;ctx.font=`700 ${p.sz}px 'Noto Serif TC',serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(p.txt,p.x,p.y);});ctx.globalAlpha=1;ctx.restore();}
+function drawGame(){ctx.save();if(shakeDur>0)ctx.translate(shakeX,shakeY);drawBG();if(state==='lv1')drawLv1();else if(state==='lv2')lv2Balls.forEach(b=>drawLv2Ball(b));else if(state==='lv3')drawLv3();bursts.forEach(b=>{ctx.globalAlpha=b.life;ctx.fillStyle=`hsla(${b.hue},${b.sat}%,${b.lit}%,1)`;if(b.star){ctx.save();ctx.translate(b.x,b.y);drawStar(ctx,0,0,b.sz*1.4,b.sz*.55);ctx.restore();}else{ctx.beginPath();ctx.arc(b.x,b.y,b.sz,0,Math.PI*2);ctx.fill();}});ctx.globalAlpha=1;if(!(invFrames>0&&Math.floor(invFrames/7)%2===0))drawHorse(player.x,player.y,player.frame);particles.forEach(p=>{ctx.globalAlpha=p.life;ctx.fillStyle=p.col;ctx.font=`700 ${p.sz}px 'Noto Serif TC',serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(p.txt,p.x,p.y);});ctx.globalAlpha=1;ctx.restore();}
 
 function updateHUD(){document.getElementById('hpFill').style.width=hp+'%';document.getElementById('moneyNum').textContent=money.toLocaleString();}
 function updateLv2Dots(){const c=document.getElementById('hudLottoDots');c.innerHTML='';for(let i=0;i<6;i++){const dot=document.createElement('div');const f=i<lv2CollectedCount;dot.style.cssText=`width:10px;height:10px;border-radius:50%;background:${f?'#8BAAFF':'rgba(139,170,255,.2)'};border:1.5px solid ${f?'#8BAAFF':'rgba(139,170,255,.35)'};box-shadow:${f?'0 0 8px rgba(139,170,255,.7)':'none'};transition:all .3s;`;c.appendChild(dot);}document.getElementById('progFill').style.width=(lv2CollectedCount/6)*100+'%';document.getElementById('progPct').textContent=`${lv2CollectedCount}/6`;}
@@ -693,16 +694,15 @@ function goToLv2Start(){showScreen('lv2StartScreen');state='lv2_start';}
 function startLv2(){resetShared();initLv2();state='lv2';showScreen(null);showHUDForLevel(2);}
 function goToLv3Start(){showScreen('lv3StartScreen');state='lv3_start';}
 function startLv3(){resetShared();lv3Firecrackers=[];lv3Explosions=[];lv3Timer=LV3_TIME;state='lv3';showScreen(null);showHUDForLevel(3);}
-function showScreen(id){['startScreen','lv2StartScreen','lv2RevealScreen','lv3StartScreen','endingScreen','resultScreen'].forEach(s=>{document.getElementById(s).style.display=(s===id?'flex':'none');});}
+function showScreen(id){['startScreen','lv2StartScreen','lv2RevealScreen','lv3StartScreen','endingScreen','resultScreen'].forEach(s=>{const el=document.getElementById(s);if(el)el.style.display=(s===id?'flex':'none');});}
 function transition(fn){const o=document.getElementById('transOverlay');o.style.opacity='1';setTimeout(()=>{fn();o.style.opacity='0';},420);}
 
 // ═══ 關鍵修正：點擊與觸碰事件 ═══
 const wrap=document.getElementById('gameWrapper');
 function toCV(cx,cy){const r=canvas.getBoundingClientRect();return{x:(cx-r.left)*(W/r.width),y:(cy-r.top)*(H/r.height)};}
 
-// 修復手機點擊無效：判斷目標是否為按鈕
 wrap.addEventListener('touchstart',e=>{
-  if(e.target.tagName==='BUTTON') return; // 如果點到按鈕，不攔截
+  if(e.target.closest('button')) return; // 點到按鈕，不攔截
   if(state==='lv1'||state==='lv2'||state==='lv3'){
     if(e.cancelable) e.preventDefault();
     const t=e.touches[0], p=toCV(t.clientX,t.clientY);
@@ -711,7 +711,7 @@ wrap.addEventListener('touchstart',e=>{
 },{passive:false});
 
 wrap.addEventListener('touchmove',e=>{
-  if(e.target.tagName==='BUTTON') return;
+  if(e.target.closest('button')) return;
   if(state==='lv1'||state==='lv2'||state==='lv3'){
     if(e.cancelable) e.preventDefault();
     const t=e.touches[0], p=toCV(t.clientX,t.clientY);
@@ -721,28 +721,27 @@ wrap.addEventListener('touchmove',e=>{
 
 wrap.addEventListener('touchend',()=>touching=false);
 
-// 按鈕統一改用 pointerdown 提升反應速度
-document.getElementById('startBtn').addEventListener('pointerdown',()=>transition(startLv1));
-document.getElementById('lv2StartBtn').addEventListener('pointerdown',()=>transition(startLv2Reveal));
-document.getElementById('resultBtn').addEventListener('pointerdown',()=>{
+document.getElementById('startBtn').addEventListener('click',()=>transition(startLv1));
+document.getElementById('lv2StartBtn').addEventListener('click',()=>transition(startLv2Reveal));
+document.getElementById('resultBtn').addEventListener('click',()=>{
   if(currentLevel===2) transition(startLv2Reveal);
   else if(currentLevel===3) transition(startLv3);
   else transition(startLv1);
 });
-document.getElementById('nextLvBtn').addEventListener('pointerdown',()=>{
+document.getElementById('nextLvBtn').addEventListener('click',()=> {
   if(currentLevel===1) transition(goToLv2Start);
   else if(currentLevel===2) transition(goToLv3Start);
 });
-document.getElementById('revealStartBtn').addEventListener('pointerdown',startLv2);
-document.getElementById('lv3StartBtn').addEventListener('pointerdown',()=>transition(startLv3));
-document.getElementById('endingReplayBtn').addEventListener('pointerdown',()=>transition(startLv1));
+document.getElementById('revealStartBtn').addEventListener('click',startLv2);
+document.getElementById('lv3StartBtn').addEventListener('click',()=>transition(startLv3));
+document.getElementById('endingReplayBtn').addEventListener('click',()=>transition(startLv1));
 
 window.addEventListener('resize',()=>{const s=Math.min(window.innerWidth/W,window.innerHeight/H);wrap.style.transform=`scale(${s})`;});
 window.dispatchEvent(new Event('resize'));
 
 let lastTs=0;
 function loop(ts){const dt=Math.min((ts-lastTs)/1000,0.05);lastTs=ts;update(dt);drawGame();requestAnimationFrame(loop);}
-requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
