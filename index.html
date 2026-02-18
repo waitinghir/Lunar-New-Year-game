@@ -1795,9 +1795,24 @@ document.getElementById('endingReplayBtn').addEventListener('click',()=>{
 
 const wrap=document.getElementById('gameWrapper');
 function toCV(cx,cy){const r=canvas.getBoundingClientRect();return{x:(cx-r.left)*(W/r.width),y:(cy-r.top)*(H/r.height)};}
-wrap.addEventListener('touchstart',e=>{e.preventDefault();if(state!=='lv1'&&state!=='lv2'&&state!=='lv3')return;const t=e.touches[0],p=toCV(t.clientX,t.clientY);touchX=p.x;touchY=p.y;touching=true;},{passive:false});
-wrap.addEventListener('touchmove',e=>{e.preventDefault();if(state!=='lv1'&&state!=='lv2'&&state!=='lv3')return;const t=e.touches[0],p=toCV(t.clientX,t.clientY);touchX=p.x;touchY=p.y;},{passive:false});
-wrap.addEventListener('touchend',e=>{e.preventDefault();touching=false;},{passive:false});
+wrap.addEventListener('touchstart',e=>{
+  // IMPORTANT: only preventDefault during gameplay; otherwise mobile clicks on UI buttons may be cancelled.
+  if(state!=='lv1'&&state!=='lv2'&&state!=='lv3') return;
+  e.preventDefault();
+  const t=e.touches[0],p=toCV(t.clientX,t.clientY);
+  touchX=p.x;touchY=p.y;touching=true;
+},{passive:false});
+wrap.addEventListener('touchmove',e=>{
+  if(state!=='lv1'&&state!=='lv2'&&state!=='lv3') return;
+  e.preventDefault();
+  const t=e.touches[0],p=toCV(t.clientX,t.clientY);
+  touchX=p.x;touchY=p.y;
+},{passive:false});
+wrap.addEventListener('touchend',e=>{
+  // Don't cancel tap/click synthesis on UI screens.
+  if(state==='lv1'||state==='lv2'||state==='lv3') e.preventDefault();
+  touching=false;
+},{passive:false});
 wrap.addEventListener('mousemove',e=>{if(state!=='lv1'&&state!=='lv2'&&state!=='lv3')return;const p=toCV(e.clientX,e.clientY);touchX=p.x;touchY=p.y;touching=true;});
 wrap.addEventListener('mouseleave',()=>touching=false);
 
